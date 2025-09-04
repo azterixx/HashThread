@@ -10,6 +10,7 @@ import SharePhotoIcon from "@/icons/SharePhotoIcon";
 import { memo, useRef, useState } from "react";
 import { ImagePreview } from "./ImagePreview";
 import { CircularTextLimit } from "./CircularTextLimit";
+import { useDropzone } from "react-dropzone";
 
 type CreateProps = {
   type?: "thread" | "comment";
@@ -23,8 +24,8 @@ export const CreateThreadAndComment = memo(
     const queryClient = useQueryClient();
     const { textAreaRef, text, setText, handleChange } =
       useAutoResizeTextarea();
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [imageFile, setImageFile] = useState<File[] | undefined>(undefined);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // УЛУЧШИТЬ КОД В БУДУЩЕМ
     // для тредов
@@ -64,10 +65,6 @@ export const CreateThreadAndComment = memo(
       textAreaRef.current?.focus();
     };
 
-    const handleIconClick = () => {
-      fileInputRef.current?.click();
-    };
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (files) {
@@ -76,6 +73,23 @@ export const CreateThreadAndComment = memo(
       }
     };
 
+    // dropzone
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+      accept: {
+        "image/*": [],
+      },
+      onDrop: (acceptedFiles) => {
+        setImageFile((prev) => [...(prev ?? []), ...acceptedFiles]);
+      },
+    });
+
+    const handleIconClick = () => {
+      setIsModalOpen(true);
+    };
+
+    const onCloseModal = () => {
+      setIsModalOpen(false);
+    };
     return (
       // Добавляем onClick для фокусировки
       <div className="h-auto w-full" onClick={handleFocus}>
@@ -123,10 +137,37 @@ export const CreateThreadAndComment = memo(
                 <input
                   type="file"
                   accept="image/*"
-                  ref={fileInputRef}
                   onChange={handleFileChange}
                   className="hidden"
                 />
+              </div>
+            )}
+
+            {isModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="w-[400px] animate-fadeIn rounded-lg bg-bgLighter p-6 text-textWhite">
+                  <h2 className="mb-4 text-lg font-semibold text-textWhite">
+                    Upload Images
+                  </h2>
+                  <div
+                    {...getRootProps()}
+                    className="cursor-pointer rounded border-2 border-borderColor p-8 text-center transition-colors hover:border-primaryGreen"
+                  >
+                    <input {...getInputProps()} />
+                    {isDragActive ? (
+                      <p className="text-textGray">Drop the files here ...</p>
+                    ) : (
+                      <p className="text-textGray">
+                        Drag and drop some images here, or click to select files
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button variant={"create"} onClick={onCloseModal}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
