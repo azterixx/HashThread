@@ -1,0 +1,5 @@
+{$DUCKDNS_SUBDOMAIN}.duckdns.org {
+	encode gzip
+	reverse_proxy nest-app:3000
+}
+
